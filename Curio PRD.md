@@ -836,3 +836,200 @@ Curio should succeed if a business owner can quickly answer:
 
 The ultimate goal of Curio is to make inventory management **clear, organized, and actionable**, while giving businesses a single place to understand their stock and business performance.
 
+---
+
+# **28\. Implementation Plan**
+
+> Ordered build sequence. Each phase ends with runnable local app + concrete deliverables. Do not skip phases — each phase is a dependency for the next.
+
+## **Phase 0 — Project Foundation (Local Dev Ready)**
+
+**Goal:** Runnable local skeleton with DB, auth shell, and navigation.
+
+**Deliverables:**
+
+* Next.js + TypeScript repo initialized with Tailwind CSS + shadcn/ui, ESLint/Prettier
+* Prisma + SQLite wired (`prisma/schema.prisma`, `prisma/curio.db`, migrations working)
+* Auth.js shell with login page, seeded users (Admin / Manager / Staff), session + role in middleware
+* App shell layout with PRD §22 navigation: Dashboard, Inventory, Sales, Purchases, Suppliers, Restock, Locations, Expenses, Reports, Activity, Users, Settings
+* Local run verified: `npm install`, `npx prisma migrate dev`, `npm run dev` → app at `http://localhost:3000`
+* README updated with real run commands
+
+## **Phase 1 — Core Inventory**
+
+**Goal:** PRD §6 + §9 — create and manage products.
+
+**Deliverables:**
+
+* `Product` model: name, quantity (computed per-location in Phase 2, single-qty for now), category, price, costPrice, imagePath, minStockLevel, description, createdBy/updatedAt
+* `Category` model + CRUD UI
+* Inventory pages: list, create, edit, detail, delete (soft or confirm), manual quantity correction
+* Stock statuses computed: In Stock / Low Stock / Out of Stock
+* Search by name; filter by category/status; sort by name/quantity/price/recent/status
+* Add Stock / Remove Stock actions with reason field (writes to StockHistory stub)
+* Product image upload to local `public/uploads/products/` working end-to-end
+* Empty/loading/error states for inventory list
+
+## **Phase 2 — Multiple Locations, Transfers & Stock History**
+
+**Goal:** PRD §7 + §17 + §18 — where stock is and how it moves.
+
+**Deliverables:**
+
+* `Location` model + CRUD (Main Store, Warehouse, Branch 1/2 seed)
+* `StockLevel` model (productId + locationId + quantity, unique constraint) replacing single-qty; combined + per-location views
+* `StockTransfer` model: product, qty, source, destination, date, responsible, reason, status Pending → In Transit → Received with status transitions enforcing inventory moves only on Received
+* Transfer UI: create, list, approve/receive, history
+* `StockHistory` full log: item, qtyChanged, type (purchase/sale/adjustment/transfer), date, reason, user, location; per-product history + global history page
+* Inventory filters extended by location
+
+## **Phase 3 — Suppliers, Purchases & Sales**
+
+**Goal:** PRD §11 + §12 + §13 — Purchase → Stock → Sale flow.
+
+**Deliverables:**
+
+* `Supplier` model: name, contact, products supplied (M2M), purchase history view; supplier CRUD + detail page
+* `Purchase` + `PurchaseItem` models: supplier, items/qty/cost, date, receiving location; recording purchase atomically increments `StockLevel` + writes `StockHistory`
+* `Sale` + `SaleItem` models: product, qty, selling price, date, location, recordedBy; recording sale validates stock availability, atomically decrements + writes history
+* Sales history + Purchases history pages with filters (date, location, supplier, user)
+* Restock List v1: query `quantity <= minStockLevel` per location showing product, current/min qty, supplier, location, status; CTA → prefilled Purchase
+
+## **Phase 4 — Dashboard & Notifications**
+
+**Goal:** PRD §10 + §19 — home screen + attention-driving alerts.
+
+**Deliverables:**
+
+* Dashboard queries: total SKUs, total units, low-stock count, out-of-stock count, recent sales/purchases/activity, restock needs, period sales/expenses/profit summary
+* Dashboard UI with quick actions: Add Item, Add/Remove Stock, Record Sale/Purchase, Add Expense, View Restock, Transfer Stock
+* `Notification` model + dropdown/toast: low-stock, out-of-stock, restock reminder, transfer received, significant stock change; per-user read/unread + preferences page
+* Background check on stock write that upserts notifications
+
+## **Phase 5 — Expenses & Profit Tracking**
+
+**Goal:** PRD §14 + §15 — true business performance.
+
+**Deliverables:**
+
+* `Expense` model: amount, category (Rent/Transportation/Packaging/Staff/Electricity/Marketing/Other), description, date, location; CRUD + history + by-category view
+* Profit logic: product-level (revenue from Sales, COGS from Purchase costPrice/FIFO-average, profit, qty sold); period-level (Revenue − COGS − Expenses)
+* Profit cards on Dashboard + product detail; unit tests for profit math
+* Cost price captured at purchase time to support COGS
+
+## **Phase 6 — Reports, Analytics & Activity History**
+
+**Goal:** PRD §16 + §20 — decision-friendly reporting.
+
+**Deliverables:**
+
+* Reports pages with period picker + this-vs-last comparison: inventory (current/low/out/by-category/by-location), sales (over time/best-sellers/by-location), purchases (history/supplier spending/by-location), expenses (over time/by-category/by-location), profit (revenue/costs/expenses/profit/product profitability)
+* Charts (e.g., Recharts) for sales over time, expenses by category, stock trends
+* `ActivityLog` global feed: product created/updated, stock added/removed, sale/purchase/expense recorded, transfer, supplier update, user activity; each with user + timestamp
+* CSV export v1 for inventory/sales/purchases (prepares Future Enhancement: data export)
+
+## **Phase 7 — Roles, Users, Settings & Release Hardening**
+
+**Goal:** PRD §21 + polish for local use.
+
+**Deliverables:**
+
+* `User` management UI (Admin only): invite/disable, assign Admin/Manager/Staff, per-module permission matrix enforced in server actions + middleware
+* Settings page: business name, currency, default location, low-stock defaults, notification defaults
+* Validation (Zod), error handling, audit coverage check (every mutating action writes History/Activity)
+* Seed script + backup script for `curio.db` + uploads folder
+* Final QA: full user flows from PRD §23 (Add Product, Receive, Sell, Restock, Move, Review Performance) verified locally
+
+---
+
+# **29\. Technical Decisions**
+
+## **29.1 Framework — Next.js (React + App Router + TypeScript) + Tailwind CSS + shadcn/ui**
+
+**Choice:** Next.js 14+ Full-stack web app, TypeScript, Tailwind CSS, shadcn/ui components, Zod validation, Recharts for reports.
+
+**Why:**
+
+* One repo serves UI + API (Server Actions / Route Handlers) — ideal for PRD flows like Record Sale → decrement stock → write history atomically.
+* App Router + middleware natively supports role-gated routes (Admin/Manager/Staff per PRD §21).
+* Runs locally with a single `npm run dev` on Windows with no extra servers.
+* Recharts + server components cover Dashboard (§10) and Reports (§16) without a separate frontend build pipeline.
+
+Local command: `npm run dev` → `http://localhost:3000`.
+
+## **29.2 Database — FINAL CHOICE: SQLite (via Prisma ORM) for Local Development**
+
+**Final choice:** SQLite file `prisma/curio.db` accessed via Prisma ORM (`better-sqlite3` driver). Schema models: User, Product, Category, Location, StockLevel, StockHistory, Supplier, Purchase, Sale, Expense, StockTransfer, Notification, ActivityLog.
+
+**Why SQLite fits Curio PRD + local-run requirement:**
+
+* PRD §25 Initial Scope is single-business SMB inventory (thousands of SKUs, not millions). SQLite handles this easily with ACID transactions, which is exactly what PRD §12/§13 need: Record Sale → validate stock → decrement StockLevel → write StockHistory/Sale in one atomic transaction. Same for Purchases and Transfers (§18).
+* PRD §7 + §20 require full audit history (who changed what, when, where). SQLite's transactional guarantees prevent half-written stock + history states during local dev without running a server.
+* Requirement “app + database must run locally on my computer”: SQLite is zero-install, zero-service, single file. On Windows this means `npx prisma migrate dev` just works — no Postgres install, no Docker Desktop, no port conflicts, no background service. Backup is copying `curio.db` + `public/uploads/`.
+* Aligns with PRD §24 principles Simple/Clear: lowest operational overhead for Phase 0-7 while keeping schema Postgres-compatible via Prisma for later scale.
+
+### Advantages of SQLite (for Curio):
+
+* Zero-ops local: no server, works offline, instant `npm run dev`.
+* ACID + single-file backup ideal for single-operator dev/testing of all PRD §23 flows (Add → Receive → Sell → Restock → Transfer → Reports).
+* Sufficient performance for dashboard (§10) and reports (§16) aggregations at SMB scale.
+* Prisma migration path to PostgreSQL later (change provider + connection string, no app-logic rewrite if we avoid SQLite-only raw SQL).
+
+### Disadvantages / limits of SQLite (PRD-specific):
+
+* Single-writer lock: if two terminals record sales simultaneously (e.g., Main Store + Branch 1 in production), writes serialize and can hit `SQLITE_BUSY`. Acceptable for local single-user dev, risky for multi-user production.
+* No network server, replication, or row-level security — limits PRD §17/§21 multi-location concurrent use in production.
+* Weaker concurrency tuning and advanced types vs. server DBs.
+
+### Alternative Considered — PostgreSQL 16 (local via Docker / installer)
+
+* **Pros:** Best for production multi-user: concurrent sales/purchases from multiple locations, robust permissions, connection pooling, replication, scales to hosted deployment. Handles PRD §17 + §18 + §21 at scale.
+* **Cons:** Requires Postgres install or Docker on Windows, heavier setup/memory, more complex backup/restore for a non-technical owner, overkill for Phase 0-5 local dev velocity. Adds a second failure point (DB service down → app down) during development.
+
+### Trade-off summary for Curio:
+
+* Local speed + simplicity + offline + easy backup → SQLite wins for now.
+* Concurrent multi-terminal writes + multi-store production + hosted scale → PostgreSQL wins later.
+* Since current constraint is explicitly local dev and PRD Initial Scope (§25) excludes high-scale features, velocity and reliability of local setup outweigh concurrency needs.
+
+### Decision & Rationale:
+
+**Use SQLite for all local development (Phase 0–7). Keep Prisma schema Postgres-compatible and isolate raw SQL so a future switch to PostgreSQL is a migration, not a rewrite, when concurrent multi-location production demands it.**
+
+## **29.3 Authentication — Auth.js (NextAuth v5) Credentials + Prisma Adapter**
+
+**Choice:** Auth.js with Credentials provider, Prisma Adapter (session stored in SQLite), bcryptjs password hashing, role (`ADMIN/MANAGER/STAFF`) embedded in JWT/session, route middleware enforcement.
+
+**Why:**
+
+* Works 100% offline/locally — no cloud dependency (unlike Clerk/Supabase Auth/Auth0 which need external keys and violate local-first dev).
+* Directly implements PRD §21 roles; server-side checks prevent Staff from accessing profit/admin routes.
+* Seeded local users allow immediate testing of permission matrix.
+
+Future: add OAuth or PIN-login without changing session/role model.
+
+## **29.4 File / Image Storage — Local Filesystem**
+
+**Choice:** Local directory `public/uploads/products/` (gitignored, created on boot), served statically by Next.js. DB stores relative path only. Uploads validated (type/size), resized with `sharp` (e.g., max 1200px, thumbnail 300px).
+
+**Why:**
+
+* Satisfies PRD product-image requirement (§6) with zero cloud cost and offline capability.
+* Backup = copy folder alongside `curio.db`.
+* Migration path: swap storage helper for S3-compatible (MinIO/AWS S3) later without changing DB schema — store key/path abstraction from Phase 1.
+
+Limits: not shared across machines (acceptable for local dev); enforce 5 MB max, allow jpg/png/webp only.
+
+## **29.5 Local Development Setup**
+
+* Node.js LTS 20+, npm/pnpm, Git
+* No Docker required for default path (only needed if switching to PostgreSQL later)
+* Env: `.env` with `DATABASE_URL="file:./curio.db"`, `AUTH_SECRET=<generated>`, `UPLOAD_DIR=./public/uploads`
+* Commands:
+  * `npm install`
+  * `npx prisma migrate dev --name init`
+  * `npm run db:seed`
+  * `npm run dev`
+* Verify: open `http://localhost:3000`, login as seeded admin, run PRD §23 flows (Add → Receive → Sell → Restock → Transfer → Reports).
+
+
