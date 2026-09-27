@@ -1032,4 +1032,19 @@ Limits: not shared across machines (acceptable for local dev); enforce 5 MB max,
   * `npm run dev`
 * Verify: open `http://localhost:3000`, login as seeded admin, run PRD §23 flows (Add → Receive → Sell → Restock → Transfer → Reports).
 
+---
+
+# **30\. Design Refinement Note**
+
+**Request:** Increase visual contrast and make typography clearer / easier to read in `design.html`, with improved text hierarchy for headings, labels, and inventory information, while keeping the overall Curio visual style. No unrelated design changes.
+
+**What was changed in `design.html` (refinement only):**
+
+* **Contrast:** Body/secondary text moved to pure black / near-black (`#000` / `#0F172A`); borders and dividers darkened to `2px` black / `#64748B`; table header uses black background with white text; status badges use black borders + black text; sidebar / mobile nav use black background with white text; footer and hints use black semibold instead of small light-gray.
+* **Typography clarity:** Base size 16px, weight 500, line-height 1.6, Arial-first stack; headings tightened to 1.2 line-height with 800 weight.
+* **Text hierarchy:** Brand 22px / page title 28px / section 19px (all 800); stat numbers 34px tabular-nums with 14px uppercase labels; product names 17px/800; qty 19px tabular-nums; table headers 14px uppercase; form labels 15px/800; hints/meta 14px semibold.
+* **Preserved:** Existing Curio layout, teal primary / amber secondary palette, buttons, cards, grids, responsive behavior, and all PRD §§1–29 requirements unchanged.
+
+**Status:** This refinement is reflected in `design.html` in the project root. No product requirements were removed or modified.
+
 
