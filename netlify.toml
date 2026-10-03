@@ -6,8 +6,5 @@
 [build]
   publish = "."
 
-# Serve the app at the site root: yoursite.netlify.app → app.html
-[[redirects]]
-  from = "/"
-  to = "/app.html"
-  status = 200
+# index.html is served automatically at the site root:
+# yoursite.netlify.app → the Curio app. No redirects needed.

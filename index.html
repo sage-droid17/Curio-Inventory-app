@@ -1658,7 +1658,7 @@ async function startCamera(){
   const show=m=>{if(hint())hint().textContent=m;};
   const showRetry=()=>{const r=retry();if(r)r.style.display="";};
   if(!("BarcodeDetector" in window)){show("This browser cannot read barcodes from the camera. Use Edge or Chrome — or a USB scanner, or type the code.");return;}
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){show("Camera is unavailable on this page. Open the app at http://localhost:8000/app.html instead, then press Retry camera.");showRetry();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){show("Camera is unavailable on this page. Open the app at http://localhost:8000/ instead, then press Retry camera.");showRetry();return;}
   show("Requesting camera… please press Allow if asked.");
   stopCamera();
   try{
@@ -1684,7 +1684,7 @@ async function startCamera(){
     const n=(e&&e.name)||"";
     if(n==="NotAllowedError")show("Camera blocked. Click the camera icon in the address bar, allow access, then press Retry camera.");
     else if(n==="NotFoundError"||n==="OverconstrainedError")show("No camera found on this computer. Use a USB barcode scanner (recommended) or type the code.");
-    else if(n==="SecurityError"||n==="NotSupportedError")show("The camera needs a secure page. Run the app at http://localhost:8000/app.html, then press Retry camera.");
+    else if(n==="SecurityError"||n==="NotSupportedError")show("The camera needs a secure page. Run the app at http://localhost:8000/, then press Retry camera.");
     else show("Camera unavailable ("+(n||"error")+"). Use a USB scanner or type the code — or press Retry camera.");
     stopCamera();showRetry();
   }
