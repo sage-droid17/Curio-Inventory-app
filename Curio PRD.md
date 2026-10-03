@@ -940,6 +940,23 @@ The ultimate goal of Curio is to make inventory management **clear, organized, a
 * Seed script + backup script for `curio.db` + uploads folder
 * Final QA: full user flows from PRD §23 (Add Product, Receive, Sell, Restock, Move, Review Performance) verified locally
 
+## **Phase 8 — Barcode Scanning**
+
+**Goal:** Promote barcode scanning from §26 Future Enhancements into the build — faster, error-free stock actions using product barcodes.
+
+**Deliverables:**
+
+* `barcode` field on `Product` (SKU / EAN-13 / UPC / Code 128), unique where present; bulk-assign and print-friendly label view
+* Scanner input support: USB HID keyboard-wedge scanners plus device-camera scanning (e.g., ZXing library; `localhost` counts as a secure context so the camera works in local dev)
+* Scan-to-find: scanning on Inventory jumps to the matching product detail
+* Scan-to-sell: scanning on the Sales page adds the product as a sale line (quantity editable), then records the sale with normal stock validation + history
+* Scan-to-receive: scanning on Purchases / Add Stock prefills the product and increments the receiving location's stock
+* Scan-to-transfer: scanning on Transfers prefills the product with source availability check
+* Unknown-barcode handling: clear message offering to link the code to an existing product or create the product on the spot
+* Every scan-driven change writes the same `StockHistory` / `ActivityLog` entries as manual actions, tagged with the scan method
+* Role matrix respected (e.g., Staff can scan-to-sell but not scan-to-edit products or costs)
+* QA: full scan flows verified locally with a real scanner and a laptop/phone camera
+
 ---
 
 # **29\. Technical Decisions**

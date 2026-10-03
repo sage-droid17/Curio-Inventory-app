@@ -1,0 +1,13 @@
+# Curio on Netlify (static site — no build step).
+# Deploy: connect this repo in Netlify (Add new site → Import an existing
+# project → GitHub → sage-droid17/Curio-Inventory-app). These settings are
+# picked up automatically. Every push to master then auto-deploys.
+
+[build]
+  publish = "."
+
+# Serve the app at the site root: yoursite.netlify.app → app.html
+[[redirects]]
+  from = "/"
+  to = "/app.html"
+  status = 200
