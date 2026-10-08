@@ -155,11 +155,11 @@
     <div class="login-brand"><div class="logo">C</div><div><h2>Curio</h2><p class="hint" id="loginBiz" style="margin:0">Inventory Management</p></div></div>
     <form onsubmit="doLogin(event)">
       <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" required maxlength="120" placeholder="e.g. ama@curio.shop" autocomplete="username" /></div>
-      <div class="field"><label for="loginPass">Password</label><input id="loginPass" type="password" required maxlength="120" placeholder="Your password" autocomplete="current-password" /></div>
+      <div class="field"><label for="loginPass">Password</label><div style="position:relative"><input id="loginPass" type="password" required maxlength="120" placeholder="Your password" autocomplete="current-password" style="padding-right:44px" /><button type="button" onclick="togglePw('loginPass',this)" title="Show/hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">👁️</button></div></div>
       <div class="err" id="loginErr"></div>
       <div><button class="btn btn-primary" type="submit" style="width:100%">Sign in</button></div>
+      <p style="text-align:center;margin:10px 0 0"><a href="#" onclick="openForgotPw(event)" style="font-weight:700">Forgot password?</a></p>
     </form>
-    <p class="hint" style="margin-top:12px">Demo accounts — Ama: ama@curio.shop · Kwame: kwame@curio.shop · Abena: abena@curio.shop (default password <strong>curio123</strong>; change it in Users after signing in).</p>
   </div>
 </div>
 <div class="mobile-nav" id="mobileNav" style="display:none"></div>
@@ -550,7 +550,7 @@
             </div>
             <div class="row2">
               <div class="field"><label for="userEmail">Email (login) *</label><input id="userEmail" type="email" required maxlength="120" placeholder="e.g. efua@curio.shop" /></div>
-              <div class="field"><label for="userPass">Password (min 6) *</label><input id="userPass" type="password" required maxlength="120" placeholder="Set a password" autocomplete="new-password" /></div>
+              <div class="field"><label for="userPass">Password (min 6) *</label><div style="position:relative"><input id="userPass" type="password" required maxlength="120" placeholder="Set a password" autocomplete="new-password" style="padding-right:44px" /><button type="button" onclick="togglePw('userPass',this)" title="Show/hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">👁️</button></div></div>
             </div>
             <div><button class="btn btn-primary btn-sm" type="submit">Add user</button></div>
           </form>
@@ -662,7 +662,7 @@ const seed=()=>({
     {id:"u-staff",name:"Abena",email:"abena@curio.shop",salt:"s-abe-03",pass:hashPw("s-abe-03","curio123"),role:"Staff",active:true}
   ],
   activeUserId:null,
-  settings:{businessName:"My Business",currency:"$",defaultLocationId:"l1",defaultMin:5},
+  settings:{businessName:"My Business",currency:"₦",defaultLocationId:"l1",defaultMin:5},
   expenses:[
     {id:"e1",amount:200,category:"Rent",desc:"Shop rent",locationId:"l1",date:new Date(Date.now()-5*86400000).toLocaleString(),ts:Date.now()-5*86400000},
     {id:"e2",amount:35,category:"Transportation",desc:"Delivery fuel",locationId:"l2",date:new Date(Date.now()-3*86400000).toLocaleString(),ts:Date.now()-3*86400000},
@@ -682,6 +682,7 @@ if(!db.notifications)db.notifications=[];
 if(!db.prefs)db.prefs={low:true,out:true,transfer:true,bigchange:true,expiry:true};
 else{if(db.prefs.expiry===undefined)db.prefs.expiry=true;}
 if(!db.expenses){const fresh=seed();db.expenses=fresh.expenses;save();}
+if(db.settings&&db.settings.currency==="$")db.settings.currency="₦";
 if(!db.returns)db.returns=[];
 if(!db.payments)db.payments=[];
 ["customers","orders","budgets"].forEach(k=>{if(k in db)delete db[k];});
@@ -707,7 +708,7 @@ const setQty=(pid,lid,qty)=>{let r=db.stock.find(s=>s.productId===pid&&s.locatio
 const statusOf=p=>{const t=totalQty(p.id);if(t<=0)return "Out of Stock";const rows=db.stock.filter(s=>s.productId===p.id);if(t<=p.min)return "Low Stock";if(rows.some(r=>r.qty<=p.min))return "Low Stock";return "In Stock";};
 const badge=s=>s==="In Stock"?'<span class="badge in">In Stock</span>':s==="Low Stock"?'<span class="badge low">Low Stock</span>':'<span class="badge out">Out of Stock</span>';
 const tbadge=s=>s==="Pending"?'<span class="badge pend">Pending</span>':s==="In Transit"?'<span class="badge transit">In Transit</span>':'<span class="badge received">Received</span>';
-const money=n=>((db&&db.settings&&db.settings.currency)||"$")+Number(n||0).toFixed(2);
+const money=n=>((db&&db.settings&&db.settings.currency)||"₦")+Number(n||0).toFixed(2);
 const now=()=>new Date().toLocaleString();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function log(t){db.activity.unshift({text:t,time:now()});db.activity=db.activity.slice(0,30);save();}
@@ -1694,6 +1695,7 @@ function renderBranding(){
 }
 function showLogin(){document.getElementById("loginErr").textContent="";document.getElementById("loginScreen").classList.add("show");const e=document.getElementById("loginEmail");if(e)setTimeout(()=>e.focus(),100);}
 function hideLogin(){document.getElementById("loginScreen").classList.remove("show");}
+function togglePw(id,btn){const i=document.getElementById(id);if(!i)return;const show=i.type==="password";i.type=show?"text":"password";if(btn)btn.textContent=show?"🙈":"👁️";i.focus();}
 function doLogin(e){
   e.preventDefault();
   const email=document.getElementById("loginEmail").value.trim().toLowerCase();
@@ -1711,6 +1713,27 @@ function signOut(){
   db.activeUserId=null;save();closeModal();nav();go("dashboard");
   if(u)toast(`Signed out (${u.name}).`,null);
 }
+function openForgotPw(e){
+  if(e)e.preventDefault();
+  openModal("Forgot password",`<p class="hint">Enter your account email below. Password resets are done by an Admin in <strong>Users → Reset PW</strong> (resets to the default password).</p>
+  <form onsubmit="submitForgotPw(event)" style="padding:0">
+    <div class="field"><label>Account email</label><input id="fpEmail" type="email" required maxlength="120" placeholder="e.g. ama@curio.shop" /></div>
+    <div class="err" id="fpErr"></div>
+    <div class="hint" id="fpMsg"></div>
+    <div style="margin-top:8px"><button class="btn btn-primary btn-sm" type="submit">Continue</button></div>
+  </form>`);
+}
+function submitForgotPw(e){
+  e.preventDefault();
+  const em=document.getElementById("fpEmail").value.trim().toLowerCase();
+  const err=document.getElementById("fpErr"),msg=document.getElementById("fpMsg");
+  err.textContent="";msg.textContent="";
+  const u=db.users.find(x=>(x.email||"").toLowerCase()===em);
+  if(!u||!u.active){err.textContent="No active account found with that email.";return;}
+  msg.textContent=`Account found for ${u.name} (${u.role}). Ask an Admin to reset it in Users → Reset PW, then sign in and change it in My account.`;
+  log(`Password reset requested for ${u.name}`);
+  save();
+}
 function changePw(e){
   e.preventDefault();
   const me=currentUser();if(!me)return;
@@ -1726,9 +1749,9 @@ function openSwitchUser(){
   const me=currentUser();if(!me)return;
   openModal("My account",`<p><strong>${esc(me.name)}</strong> ${roleBadge(me.role)}<br><span class="hint">${esc(me.email||"")}</span></p>
   <form onsubmit="changePw(event)" style="padding:0">
-    <div class="field"><label>Current password</label><input id="pwCur" type="password" required maxlength="120" autocomplete="current-password" /></div>
-    <div class="field"><label>New password (min 6 characters)</label><input id="pwNew" type="password" required maxlength="120" autocomplete="new-password" /></div>
-    <div class="field"><label>Confirm new password</label><input id="pwCf" type="password" required maxlength="120" autocomplete="new-password" /></div>
+    <div class="field"><label>Current password</label><div style="position:relative"><input id="pwCur" type="password" required maxlength="120" autocomplete="current-password" style="padding-right:44px" /><button type="button" onclick="togglePw('pwCur',this)" title="Show/hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">👁️</button></div></div>
+    <div class="field"><label>New password (min 6 characters)</label><div style="position:relative"><input id="pwNew" type="password" required maxlength="120" autocomplete="new-password" style="padding-right:44px" /><button type="button" onclick="togglePw('pwNew',this)" title="Show/hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">👁️</button></div></div>
+    <div class="field"><label>Confirm new password</label><div style="position:relative"><input id="pwCf" type="password" required maxlength="120" autocomplete="new-password" style="padding-right:44px" /><button type="button" onclick="togglePw('pwCf',this)" title="Show/hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">👁️</button></div></div>
     <div class="err" id="pwErr"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" type="submit">Change password</button><button class="btn btn-ghost btn-sm" type="button" onclick="signOut()">Sign out</button></div>
   </form>`);
