@@ -8,7 +8,9 @@ It connects **Purchases → Inventory → Sales → Expenses → Profit**, plus 
 
 ## 🌐 Live Demo
 
-Hosted on Netlify (static deployment, auto-deploys from the `master` branch). See the repository's About/website field for the live URL.
+**https://curio-inventory.netlify.app**
+
+Hosted on Netlify (static deployment, auto-deploys from the `master` branch).
 
 ## Problem It Solves
 
@@ -66,7 +68,7 @@ No install, no build step, no server required.
 1. In the project folder, run `python -m http.server 8000`.
 2. Open `http://localhost:8000/` in Chrome or Edge.
 
-**Option C — hosted:** open the Netlify live URL.
+**Option C — hosted:** open https://curio-inventory.netlify.app (required for camera scanning, installable app, and online checkout).
 
 ## Demo Login Accounts
 

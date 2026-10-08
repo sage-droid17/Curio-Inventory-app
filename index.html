@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Curio</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234CAF50'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='38' font-weight='bold' text-anchor='middle' fill='white'%3EC%3C/text%3E%3C/svg%3E" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#4CAF50" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
 <script src="https://js.paystack.co/v2/inline.js"></script>
 <style>
   :root{
@@ -196,6 +199,7 @@
       <div style="display:flex;gap:10px;align-items:center"><button class="btn btn-ghost btn-sm menu-btn" onclick="toggleMenu()" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appDrawer">☰</button><div><h2 id="pageTitle">Dashboard</h2><p>What do I have · where is it · what needs attention?</p></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" id="themeBtn" onclick="toggleTheme()" title="Switch to dark mode">🌙</button>
+        <button class="btn btn-ghost btn-sm" id="installBtn" style="display:none" onclick="installApp()">📲 Install</button>
         <button class="btn btn-ghost btn-sm" id="bellBtn" onclick="toggleNotif(event)">🔔 <strong id="bellCount">0</strong></button>
         <button class="btn btn-ghost btn-sm" onclick="resetDemo()">Reset data</button>
             <button class="btn btn-primary btn-sm" onclick="go('add')">+ Add Item</button>
@@ -2029,7 +2033,30 @@ function exportPayments(){
     (db.payments||[]).map(p=>[p.ref,p.time,Number(p.naira).toFixed(2),p.email,p.status,p.by||""]));
 }
 function resetDemo(){if(!confirm("Reset all data to defaults? This cannot be undone."))return;db=seed();save();syncStockAlerts();resetProductForm();resetExpenseForm();renderDashboard();renderInventory();renderLocations();renderTransferForm();renderTransfers();renderSuppliers();renderPurchaseForm();renderPurchases();renderRestock();renderCategories();renderHistory();renderSale();renderNotifications();renderExpenses();curPeriod="month";renderReports();renderUsers();renderSettings();renderPayments();go("dashboard");}
-nav();applyTheme(currentTheme());save();syncStockAlerts();renderBell();renderDashboard();renderInventory();renderLocations();renderTransferForm();renderTransfers();renderSuppliers();renderPurchaseForm();renderPurchases();renderRestock();renderCategories();renderHistory();renderSale();renderNotifications();renderExpenses();renderReports();renderUsers();renderSettings();renderPayments();go("dashboard");
+/* Installable app (PWA): shows the Install button when the browser allows it. */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;updateInstallBtn();});
+window.addEventListener("appinstalled",()=>{deferredPrompt=null;updateInstallBtn();toast("Curio installed — find it on your home screen.",null);});
+function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")&&!window.MSStream;}
+function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;}
+function updateInstallBtn(){
+  const b=document.getElementById("installBtn");if(!b)return;
+  b.style.display=(!isStandalone()&&(deferredPrompt||isIosDevice()))?"":"none";
+}
+function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(c=>{if(c&&c.outcome!=="accepted")toast("Install dismissed — you can try again anytime.",null);deferredPrompt=null;updateInstallBtn();}).catch(()=>{});
+    return;
+  }
+  if(isIosDevice()){
+    openModal("Install Curio",`<p>On iPhone/iPad, install from Safari:</p><p><strong>1.</strong> Tap <strong>Share</strong> in the toolbar.<br><strong>2.</strong> Tap <strong>Add to Home Screen</strong>.<br><strong>3.</strong> Open Curio from your home screen — it runs full-screen and offline.</p>`);
+    return;
+  }
+  toast("Install is not available in this browser right now.",null);
+}
+nav();applyTheme(currentTheme());save();syncStockAlerts();renderBell();renderDashboard();renderInventory();renderLocations();renderTransferForm();renderTransfers();renderSuppliers();renderPurchaseForm();renderPurchases();renderRestock();renderCategories();renderHistory();renderSale();renderNotifications();renderExpenses();renderReports();renderUsers();renderSettings();renderPayments();updateInstallBtn();go("dashboard");
+if(location.protocol.indexOf("http")===0&&"serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}
 </script>
 </body>
 </html>

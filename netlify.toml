@@ -7,4 +7,4 @@
   publish = "."
 
 # index.html is served automatically at the site root:
-# yoursite.netlify.app → the Curio app. No redirects needed.
+# https://curio-inventory.netlify.app → the Curio app. No redirects needed.
