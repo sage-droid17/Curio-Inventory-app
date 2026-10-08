@@ -4,10 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Curio</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234CAF50'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='38' font-weight='bold' text-anchor='middle' fill='white'%3EC%3C/text%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="assets/logo-symbol.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#4CAF50" />
-<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <script src="https://js.paystack.co/v2/inline.js"></script>
 <style>
   :root{
@@ -36,6 +38,8 @@
   .app{display:flex;min-height:100vh}
   .sidebar{width:250px;flex-shrink:0;background:#212121;color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
   .logo{width:36px;height:36px;border-radius:10px;background:var(--primary);display:grid;place-items:center;font-weight:800;color:#fff;font-size:20px}
+  .brand-logo{height:34px;width:auto;max-width:100%;display:block;object-fit:contain}
+  .login-brand .brand-logo{width:48px;height:48px;margin-bottom:0}
   .brand{display:flex;gap:10px;align-items:center;margin-bottom:14px}
   .brand h1{font-size:19px;letter-spacing:1px;color:#fff}
   .brand small{display:block;font-size:12px;color:#BDBDBD;font-weight:700;letter-spacing:.4px}
@@ -175,7 +179,7 @@
 <body>
 <div id="loginScreen">
   <div class="login-card">
-    <div class="login-brand"><div class="logo">C</div><div><h2>Curio</h2><p class="hint" id="loginBiz" style="margin:0">Inventory Management</p></div></div>
+    <div class="login-brand"><img class="brand-logo login-logo" src="assets/logo-symbol.svg" alt="Curio logo" /><div><h2>Curio</h2><p class="hint" id="loginBiz" style="margin:0">Inventory Management</p></div></div>
     <form onsubmit="doLogin(event)">
       <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" required maxlength="120" placeholder="e.g. ama@curio.shop" autocomplete="username" /></div>
       <div class="field"><label for="loginPass">Password</label><div style="position:relative"><input id="loginPass" type="password" required maxlength="120" placeholder="Your password" autocomplete="current-password" style="padding-right:44px" /><button type="button" onclick="togglePw('loginPass',this)" title="Show/hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;line-height:1">👁️</button></div></div>
@@ -189,7 +193,7 @@
 <div class="scrim" id="scrim" onclick="toggleMenu(false)"></div>
 <div class="app">
   <aside class="sidebar" id="appDrawer">
-    <div class="brand"><div class="logo">C</div><h1>Curio</h1><button class="btn btn-ghost btn-sm drawer-close" onclick="toggleMenu(false)" aria-label="Close navigation menu">✕</button></div>
+    <div class="brand"><img class="brand-logo" src="assets/logo-horizontal-dark.svg" alt="Curio" /><button class="btn btn-ghost btn-sm drawer-close" onclick="toggleMenu(false)" aria-label="Close navigation menu">✕</button></div>
     <div class="side-search"><span>⌕</span><input id="sideSearch" placeholder="Search" /></div>
     <nav class="nav" id="sideNav"></nav>
     <div id="userChip"></div>
