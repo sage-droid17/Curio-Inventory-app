@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Curio — Inventory Management</title>
+<title>Curio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234CAF50'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='38' font-weight='bold' text-anchor='middle' fill='white'%3EC%3C/text%3E%3C/svg%3E" />
 <script src="https://js.paystack.co/v2/inline.js"></script>
 <style>
   :root{
@@ -39,6 +40,15 @@
   .profile .who .hint{color:#616161}
   .profile .chev{color:#212121;font-size:20px;font-weight:800}
   .main{flex:1;min-width:0}
+  .menu-btn{display:none}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70}
+  .scrim.show{display:block}
+  #loginScreen{display:none;position:fixed;inset:0;z-index:100;background:#212121;place-items:center;padding:20px}
+  #loginScreen.show{display:grid}
+  .login-card{background:#fff;border-radius:14px;padding:28px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .login-card .logo{width:48px;height:48px;font-size:26px;margin-bottom:10px}
+  .login-card h2{margin:0 0 2px}
+  .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
   .topbar{background:#fff;border-bottom:1px solid #E0E0E0;padding:14px 22px;display:flex;gap:12px;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5;flex-wrap:wrap}
   .topbar h2{color:#212121}
   .topbar p{margin:4px 0 0;font-size:16px;color:#616161;font-weight:600}
@@ -110,16 +120,24 @@
   .hbar-row{display:grid;grid-template-columns:130px 1fr 70px;gap:8px;align-items:center;margin:8px 0;font-size:14px;font-weight:700}
   .hbar-track{background:#EEEEEE;border-radius:8px;height:22px;overflow:hidden}
   .hbar-fill{background:var(--primary);height:100%;min-width:2px}
-  #notifDrop{display:none;position:fixed;top:70px;right:16px;width:min(380px,92vw);max-height:60vh;overflow-y:auto;background:#fff;border:1px solid #E0E0E0;border-radius:12px;box-shadow:0 12px 40px rgba(33,33,33,.25);z-index:60;padding:14px}
+  #notifDrop{display:none;position:fixed;top:70px;right:16px;width:min(440px,94vw);max-height:70vh;overflow-y:auto;background:#fff;border:1px solid #E0E0E0;border-radius:14px;box-shadow:0 12px 40px rgba(33,33,33,.25);z-index:60;padding:18px}
   #notifDrop.open{display:block}
-  .notif-item{padding:10px 12px;border-bottom:1px solid #EEEEEE;cursor:pointer;color:#212121}
-  .notif-item:last-child{border-bottom:none}
+  .notif-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+  .notif-head strong{font-size:17px}
+  .notif-list{display:grid;gap:10px;margin-bottom:12px}
+  .notif-item{padding:12px 14px;border:1px solid #E0E0E0;border-radius:12px;cursor:pointer;color:#212121;background:#fff}
+  .notif-item:hover{background:#F5F5F5}
   .notif-item.unread{border-left:4px solid var(--secondary);background:#FFF8E1}
+  .notif-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+  .notif-time{font-size:12px;color:#616161;font-weight:600;white-space:nowrap}
+  .notif-title{font-weight:800;font-size:15px;margin:2px 0}
+  .notif-detail{font-size:13px;color:#616161;line-height:1.5}
+  .notif-foot .btn{width:100%}
   #toasts{position:fixed;bottom:16px;right:16px;z-index:99;display:grid;gap:8px}
   footer{padding:16px 22px;font-size:14px;font-weight:600;color:#616161}
   .mobile-nav{display:none;background:#212121;color:#fff;padding:10px 12px;gap:8px;overflow-x:auto;white-space:nowrap}
   .mobile-nav button{background:transparent;color:#E0E0E0;border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:14px;font-weight:700;padding:7px 12px;cursor:pointer;white-space:nowrap}
-  @media(max-width:960px){.stats{grid-template-columns:repeat(2,1fr)}.panels{grid-template-columns:1fr}.sidebar{display:none}.mobile-nav{display:flex}}
+  @media(max-width:960px){.stats{grid-template-columns:repeat(2,1fr)}.panels{grid-template-columns:1fr}.sidebar{position:fixed;left:0;top:0;transform:translateX(-105%);transition:transform .25s ease;z-index:80;width:270px;box-shadow:0 0 40px rgba(0,0,0,.5)}.sidebar.open{transform:none}.mobile-nav{display:none}.menu-btn{display:inline-flex;align-items:center}}
   @media(max-width:560px){.stats{grid-template-columns:1fr}.row2{grid-template-columns:1fr}.content{padding:14px}}
   @media(max-width:700px){
     table{min-width:0;font-size:14px}
@@ -132,18 +150,30 @@
 </style>
 </head>
 <body>
-<div class="mobile-nav" id="mobileNav"></div>
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand"><div class="logo">C</div><div><h2>Curio</h2><p class="hint" id="loginBiz" style="margin:0">Inventory Management</p></div></div>
+    <form onsubmit="doLogin(event)">
+      <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" required maxlength="120" placeholder="e.g. ama@curio.shop" autocomplete="username" /></div>
+      <div class="field"><label for="loginPass">Password</label><input id="loginPass" type="password" required maxlength="120" placeholder="Your password" autocomplete="current-password" /></div>
+      <div class="err" id="loginErr"></div>
+      <div><button class="btn btn-primary" type="submit" style="width:100%">Sign in</button></div>
+    </form>
+    <p class="hint" style="margin-top:12px">Demo accounts — Ama: ama@curio.shop · Kwame: kwame@curio.shop · Abena: abena@curio.shop (default password <strong>curio123</strong>; change it in Users after signing in).</p>
+  </div>
+</div>
+<div class="mobile-nav" id="mobileNav" style="display:none"></div>
+<div class="scrim" id="scrim" onclick="toggleMenu(false)"></div>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand"><div class="logo">C</div><h1>CURIO<small id="brandSub">Inventory Management</small></h1></div>
+    <div class="brand"><div class="logo">C</div><h1>Curio</h1></div>
     <div class="side-search"><span>⌕</span><input id="sideSearch" placeholder="Search" /></div>
     <nav class="nav" id="sideNav"></nav>
     <div id="userChip"></div>
-    <p style="font-size:13px;font-weight:700">Data saved automatically in this browser</p>
   </aside>
   <div class="main">
     <div class="topbar">
-      <div><h2 id="pageTitle">Dashboard</h2><p>What do I have · where is it · what needs attention?</p></div>
+      <div style="display:flex;gap:10px;align-items:center"><button class="btn btn-ghost btn-sm menu-btn" onclick="toggleMenu()" aria-label="Open menu">☰</button><div><h2 id="pageTitle">Dashboard</h2><p>What do I have · where is it · what needs attention?</p></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" id="bellBtn" onclick="toggleNotif(event)">🔔 <strong id="bellCount">0</strong></button>
         <button class="btn btn-ghost btn-sm" onclick="resetDemo()">Reset data</button>
@@ -364,14 +394,17 @@
           <div class="card">
             <div class="card-head"><div><h3>Record a sale</h3><p>Deducts from the chosen location only.</p></div></div>
             <form onsubmit="recordSale(event)">
-              <div class="field"><label for="sProduct">Product</label><select id="sProduct" onchange="fillSaleLocs()"></select></div>
-              <div><button class="btn btn-ghost btn-sm" type="button" onclick="scanToSale()">Scan barcode</button></div>
-              <div class="field"><label for="sLoc">Location</label><select id="sLoc"></select></div>
+              <div class="field"><label for="sLoc">Location (whole cart)</label><select id="sLoc" onchange="refreshSaleCart()"></select></div>
+              <div class="field"><label>Items</label><div id="saleLines" style="display:grid;gap:8px"></div></div>
+              <div><button class="btn btn-ghost btn-sm" type="button" onclick="saleAddLine()">+ Add item</button>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="scanToSale()">Scan barcode</button>
+              <span class="hint" id="saleTotal"></span></div>
               <div class="row2">
-                <div class="field"><label for="sQty">Quantity sold</label><input id="sQty" type="number" min="1" value="1" required /></div>
                 <div class="field"><label for="sBy">Recorded by</label><input id="sBy" placeholder="e.g. Ama" maxlength="40" /></div>
+                <div class="field"><label for="sEmail">Customer email (for card payment)</label><input id="sEmail" type="email" maxlength="120" placeholder="e.g. customer@example.com" /></div>
               </div>
-              <div><button class="btn btn-warn" type="submit">Record Sale</button></div>
+              <div class="err" id="saleErr"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-warn" type="submit">Record Sale</button><button class="btn btn-primary" type="button" onclick="payCartWithPaystack()">Pay cart with Paystack</button></div>
               <span class="hint" id="saleHint"></span>
             </form>
           </div>
@@ -509,11 +542,17 @@
 
       <section class="view" id="view-users">
         <div class="card">
-          <div class="card-head"><div><h3>Users</h3><p>Manage team profiles and roles. Only Admins can open this page.</p></div></div>
-          <form onsubmit="addUser(event)" style="grid-template-columns:1fr auto auto;display:grid">
-            <div class="field"><label for="userName">Name</label><input id="userName" required maxlength="40" placeholder="e.g. Efua" /></div>
-            <div class="field"><label for="userRole">Role</label><select id="userRole"><option>Admin</option><option>Manager</option><option selected>Staff</option></select></div>
-            <div style="align-self:end"><button class="btn btn-primary btn-sm" type="submit">Add</button></div>
+          <div class="card-head"><div><h3>Users</h3></div></div>
+          <form onsubmit="addUser(event)">
+            <div class="row2">
+              <div class="field"><label for="userName">Name *</label><input id="userName" required maxlength="40" placeholder="e.g. Efua" /></div>
+              <div class="field"><label for="userRole">Role</label><select id="userRole"><option>Admin</option><option>Manager</option><option selected>Staff</option></select></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="userEmail">Email (login) *</label><input id="userEmail" type="email" required maxlength="120" placeholder="e.g. efua@curio.shop" /></div>
+              <div class="field"><label for="userPass">Password (min 6) *</label><input id="userPass" type="password" required maxlength="120" placeholder="Set a password" autocomplete="new-password" /></div>
+            </div>
+            <div><button class="btn btn-primary btn-sm" type="submit">Add user</button></div>
           </form>
           <div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Records</th><th>Actions</th></tr></thead><tbody id="usersBody"></tbody></table></div>
         </div>
@@ -549,7 +588,7 @@
             <p><strong>Admin</strong> — everything, including Users and Settings.</p>
             <p><strong>Manager</strong> — inventory, sales, purchases, suppliers, transfers, expenses and reports. No Users or Settings.</p>
             <p><strong>Staff</strong> — Dashboard, Inventory, Sales, History and Notifications only. No financial or setup pages.</p>
-            <p class="hint">Alert preferences live under Notifications. Switch the active user from the black sidebar.</p>
+            <p class="hint">Alert preferences live under Notifications. Sign in and out from the profile card in the black sidebar.</p>
           </div>
         </div>
       </section>
@@ -577,6 +616,8 @@ const KEY="curio-phase2-v1";
 //      recorded here rely on the Paystack popup result only.
 // Keep this integration in TEST MODE (pk_test_...). ───────────────────────
 const PAYSTACK_PUBLIC_KEY = "pk_test_78fbf01716052b237d20f8a9db0f4b09e945d010";
+/* Demo-grade password hashing (salted, non-reversible).NOTE: this protects casual viewing only — real server-side auth (e.g. Auth.js + bcrypt) is still required before multi-user or hosted use. */
+function hashPw(salt,text){let h1=0xdeadbeef^salt.length,h2=0x41c6ce57^salt.length;const s=String(salt)+"::"+String(text);for(let i=0;i<s.length;i++){const ch=s.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(16);}
 const seed=()=>({
   locations:[{id:"l1",name:"Main Store"},{id:"l2",name:"Warehouse"},{id:"l3",name:"Branch 1"},{id:"l4",name:"Branch 2"}],
   categories:["Grains","Pantry","Hygiene","Dairy","Other"],
@@ -616,11 +657,11 @@ const seed=()=>({
   notifications:[],
   prefs:{low:true,out:true,transfer:true,bigchange:true},
   users:[
-    {id:"u-admin",name:"Ama",role:"Admin",active:true},
-    {id:"u-mgr",name:"Kwame",role:"Manager",active:true},
-    {id:"u-staff",name:"Abena",role:"Staff",active:true}
+    {id:"u-admin",name:"Ama",email:"ama@curio.shop",salt:"s-ama-01",pass:hashPw("s-ama-01","curio123"),role:"Admin",active:true},
+    {id:"u-mgr",name:"Kwame",email:"kwame@curio.shop",salt:"s-kwa-02",pass:hashPw("s-kwa-02","curio123"),role:"Manager",active:true},
+    {id:"u-staff",name:"Abena",email:"abena@curio.shop",salt:"s-abe-03",pass:hashPw("s-abe-03","curio123"),role:"Staff",active:true}
   ],
-  activeUserId:"u-admin",
+  activeUserId:null,
   settings:{businessName:"My Business",currency:"$",defaultLocationId:"l1",defaultMin:5},
   expenses:[
     {id:"e1",amount:200,category:"Rent",desc:"Shop rent",locationId:"l1",date:new Date(Date.now()-5*86400000).toLocaleString(),ts:Date.now()-5*86400000},
@@ -645,7 +686,15 @@ if(!db.returns)db.returns=[];
 if(!db.payments)db.payments=[];
 ["customers","orders","budgets"].forEach(k=>{if(k in db)delete db[k];});
 db.products.forEach(p=>{if(p.barcode===undefined)p.barcode="";if(p.expiry===undefined)p.expiry="";});
-if(!db.users.some(u=>u.role==="Admin"&&u.active)){db.users[0].role="Admin";db.users[0].active=true;db.activeUserId=db.users[0].id;save();}
+if(db.users.length&&!db.users.some(u=>u.role==="Admin"&&u.active)){db.users[0].role="Admin";db.users[0].active=true;save();}
+db.users.forEach((u,i)=>{
+  if(!u.email){let base=(u.name||"user").toLowerCase().replace(/[^a-z0-9]+/g,"")||"user";let em=base+"@curio.shop",n=1;
+    while(db.users.some(x=>x!==u&&x.email===em)){n++;em=base+n+"@curio.shop";}
+    u.email=em;}
+  if(!u.salt)u.salt="s-"+u.id+"-"+i;
+  if(!u.pass)u.pass=hashPw(u.salt,"curio123");
+});
+save();
 (db.sales||[]).forEach(s=>{if(!s.ts)s.ts=Date.parse(s.time)||Date.now();});
 (db.purchases||[]).forEach(b=>{if(!b.ts)b.ts=Date.parse(b.date)||Date.now();});
 save();
@@ -685,9 +734,19 @@ function nav(){
   const si=document.getElementById("sideSearch");
   if(si&&!si.dataset.bound){si.dataset.bound="1";si.addEventListener("keydown",e=>{if(e.key==="Enter"){document.getElementById("search").value=si.value;go("inventory");}});}
 }
+function toggleMenu(show){
+  const sb=document.getElementById("sideNav").parentElement;
+  const sc=document.getElementById("scrim");
+  const open=show===undefined?!sb.classList.contains("open"):!!show;
+  sb.classList.toggle("open",open);
+  if(sc)sc.classList.toggle("show",open);
+}
 function go(id){
+  const sb=document.querySelector(".sidebar");if(sb)sb.classList.remove("open");
+  const sc=document.getElementById("scrim");if(sc)sc.classList.remove("show");
   stopCamera();
   const dd=document.getElementById("notifDrop");if(dd)dd.classList.remove("open");
+  if(!currentUser()){showLogin();return;}
   const lbl=(VIEWS.find(v=>v[0]===id)||[])[1]||id;
   if(!canGo(id)){toast(`Not permitted for the ${currentUser().role} role.`,null);return;}
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -940,7 +999,7 @@ function createTransfer(e){
   if(!(qty>=1)){document.getElementById("tErr").textContent="Quantity must be 1 or more.";return;}
   if(qtyAt(pid,sid)<qty){document.getElementById("tErr").textContent=`Only ${qtyAt(pid,sid)} available at ${locName(sid)}.`;return;}
   const p=prodById(pid);
-  db.transfers.unshift({id:"t"+Date.now(),productId:pid,qty,sourceId:sid,destId:did,date:now(),by:by||currentUser().name,reason,status:"Pending"});
+  db.transfers.unshift({id:"t"+Date.now(),productId:pid,qty,sourceId:sid,destId:did,date:now(),by:by||actor(),reason,status:"Pending"});
   pushHist(p.name,"0","transfer",`Created: ${qty} ${locName(sid)} → ${locName(did)} — ${reason}`,locName(sid));
   log(`Transfer created: ${qty} × ${p.name} ${locName(sid)} → ${locName(did)}`);save();e.target.reset();document.getElementById("tQty").value=5;
   renderTransferForm();renderTransfers();renderDashboard();
@@ -1006,11 +1065,113 @@ function renderHistory(){
   document.getElementById("histBody").innerHTML=rows.map(h=>`<tr><td>${esc(h.time)}</td><td><strong>${esc(h.name)}</strong></td><td class="qty">${esc(h.change)}</td><td>${esc(h.type)}</td><td>${esc(h.reason)}</td><td>${esc(h.location)}</td></tr>`).join("")||'<tr><td colspan="6">No history yet.</td></tr>';
 }
 function renderSale(){
-  const sel=document.getElementById("sProduct");
-  sel.innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (combined ${totalQty(p.id)})</option>`).join("")||"<option value=''>No products</option>";
-  const hl=document.getElementById("sHistLoc"),cur=hl.value;
-  hl.innerHTML='<option value="">All locations</option>'+db.locations.map(l=>`<option value="${l.id}" ${l.id===cur?"selected":""}>${esc(l.name)}</option>`).join("");
-  fillSaleLocs();renderSalesHist();
+  const sl=document.getElementById("sLoc"),curL=sl.value;
+  sl.innerHTML=db.locations.map(l=>`<option value="${l.id}" ${l.id===curL?"selected":""}>${esc(l.name)}</option>`).join("");
+  if(!document.querySelectorAll(".s-line").length)saleAddLine();
+  refreshSaleCart();renderSalesHist();
+}
+function saleAddLine(pid){
+  const wrap=document.getElementById("saleLines");if(!wrap)return;
+  const div=document.createElement("div");div.className="s-line";div.style.cssText="display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:end";
+  div.innerHTML=`<div class="field"><label>Product</label><select class="s-prod" onchange="refreshSaleCart()">${db.products.map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)} — ${money(p.price)}</option>`).join("")}</select></div>
+  <div class="field"><label>Qty</label><input class="s-qty" type="number" min="1" value="1" oninput="refreshSaleCart()" /></div>
+  <div><button class="btn btn-danger btn-sm" type="button" onclick="this.closest('.s-line').remove();refreshSaleCart()">✕</button><div class="hint s-avail"></div></div>`;
+  wrap.appendChild(div);refreshSaleCart();
+}
+function refreshSaleCart(){
+  const lid=document.getElementById("sLoc").value;
+  let total=0;
+  document.querySelectorAll(".s-line").forEach(r=>{
+    const pid=r.querySelector(".s-prod").value;
+    const q=parseInt(r.querySelector(".s-qty").value)||0;
+    const p=prodById(pid),avail=p?qtyAt(pid,lid):0;
+    const hint=r.querySelector(".s-avail");
+    if(hint)hint.textContent=p?("avail "+avail):"";
+    if(p&&q>0)total+=q*p.price;
+  });
+  const t=document.getElementById("saleTotal");
+  if(t)t.textContent="Cart total: "+money(Math.round(total*100)/100);
+  document.getElementById("saleHint").textContent="Sale deducts from the chosen location only.";
+}
+function readSaleCart(){
+  const lid=document.getElementById("sLoc").value;
+  if(!locById(lid))return{err:"Select a location."};
+  const rows=[...document.querySelectorAll(".s-line")];
+  if(!rows.length)return{err:"Add at least one item."};
+  const items=[];
+  for(const r of rows){
+    const pid=r.querySelector(".s-prod").value,q=parseInt(r.querySelector(".s-qty").value)||0;
+    const p=prodById(pid);
+    if(!p)return{err:"Select a valid product on every row."};
+    if(!(q>=1))return{err:"Quantities must be 1 or more."};
+    if(qtyAt(pid,lid)<q)return{err:`Only ${qtyAt(pid,lid)} × ${p.name} at ${locName(lid)}.`};
+    items.push({p,qty:q});
+  }
+  return{items,lid};
+}
+function recordSale(e){
+  e.preventDefault();
+  document.getElementById("saleErr").textContent="";
+  const by=(document.getElementById("sBy").value||"").trim()||actor();
+  const {items,lid,err}=readSaleCart();
+  if(err){document.getElementById("saleErr").textContent=err;return;}
+  applyCartSale(items,lid,by,null);
+  save();renderSale();renderDashboard();
+  e.target.reset();document.getElementById("saleLines").innerHTML="";renderSale();
+}
+function applyCartSale(items,lid,by,payRef){
+  const cartId="c"+Date.now()+Math.floor(Math.random()*1000);
+  const tnow=now(),tts=Date.now();
+  let big=false;
+  items.forEach(({p,qty})=>{
+    setQty(p.id,lid,qtyAt(p.id,lid)-qty);p.updatedAt=Date.now();
+    const total=Math.round(qty*p.price*100)/100;
+    db.sales.unshift({id:"s"+Date.now()+Math.floor(Math.random()*100000),cartId,productId:p.id,locationId:lid,name:p.name,qty,total,by,payRef:payRef||"",time:tnow,ts:tts});
+    pushHist(p.name,"-"+qty,"sale",`Sale × ${qty} by ${by}`,locName(lid));
+    if(qtyAt(p.id,lid)===0&&db.prefs.out)toast(`Out of stock: ${p.name} @ ${locName(lid)}`,{view:"restock"});
+    if(qty>=BIGCHANGE)big=true;
+  });
+  log(`Sold cart (${items.length} line(s)) @ ${locName(lid)} for ${money(items.reduce((a,i)=>a+i.qty*i.p.price,0))}${payRef?" — paid "+payRef:""}`);
+  syncStockAlerts();
+  return{cartId,big};
+}
+function payCartWithPaystack(){
+  document.getElementById("saleErr").textContent="";
+  const email=document.getElementById("sEmail").value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById("saleErr").textContent="Enter a customer email for the card payment.";return;}
+  const by=(document.getElementById("sBy").value||"").trim()||actor();
+  const {items,lid,err}=readSaleCart();
+  if(err){document.getElementById("saleErr").textContent=err;return;}
+  if(!PAYSTACK_PUBLIC_KEY||PAYSTACK_PUBLIC_KEY.indexOf("pk_test_YOUR_KEY_HERE")!==-1){document.getElementById("saleErr").textContent="No Paystack test key set. Paste your pk_test_ key into PAYSTACK_PUBLIC_KEY first.";return;}
+  if(typeof PaystackPop==="undefined"){document.getElementById("saleErr").textContent="Paystack checkout could not load. Check your internet connection and reload.";return;}
+  const total=Math.round(items.reduce((a,i)=>a+i.qty*i.p.price,0)*100)/100;
+  const ref="CURIO-"+Date.now()+"-"+Math.floor(Math.random()*100000);
+  try{
+    const popup=new PaystackPop();
+    popup.newTransaction({
+      key:PAYSTACK_PUBLIC_KEY,
+      email:email,
+      amount:Math.round(total*100),
+      currency:"NGN",
+      ref:ref,
+      metadata:{app:"Curio",mode:"test",kind:"cart"},
+      onSuccess:function(transaction){
+        const ok=transaction&&(transaction.status==="success"||transaction.status===true);
+        const tref=(transaction&&(transaction.reference||transaction.trxref))||ref;
+        if(!ok){document.getElementById("saleErr").textContent="Card payment was not successful ("+tref+"). Cart kept — nothing deducted.";return;}
+        const {cartId}=applyCartSale(items,lid,by,tref);
+        recordPaystackPayment(tref,email,total,"success",{saleLinked:true,cartId});
+        document.getElementById("saleErr").textContent="";
+        document.getElementById("saleHint").textContent=`Paid ${money(total)} (${tref}) — stock deducted, revenue counted once.`;
+        save();renderSale();renderDashboard();
+      },
+      onCancel:function(){
+        document.getElementById("saleErr").textContent="Card payment cancelled — cart kept, nothing deducted.";
+      }
+    });
+  }catch(ex){
+    document.getElementById("saleErr").textContent="Checkout error: "+(ex&&ex.message?ex.message:ex);
+  }
 }
 function saleRows(){
   const fl=(document.getElementById("sHistLoc").value)||"";
@@ -1030,24 +1191,6 @@ function renderSalesHist(){
     const r=ev.r;
     return `<tr><td><strong>↩ ${esc(r.name)}</strong><br><span class="hint">${esc(r.time)} · ${esc(locName(r.locationId))} · ${esc(r.reason)}</span></td><td class="qty">−${r.qty}</td><td>−${money(r.total)}</td></tr>`;
   }).join("")||'<tr><td colspan="3">No sales yet.</td></tr>';
-}
-function recordSale(e){
-  e.preventDefault();
-  const pid=document.getElementById("sProduct").value,lid=document.getElementById("sLoc").value;
-  const qty=parseInt(document.getElementById("sQty").value)||0;
-  const by=(document.getElementById("sBy").value||"").trim()||currentUser().name;
-  const p=prodById(pid);if(!p)return;
-  if(qty<1){alert("Enter quantity ≥ 1.");return;}
-  if(qtyAt(pid,lid)<qty){alert(`Only ${qtyAt(pid,lid)} at ${locName(lid)}.`);return;}
-  setQty(pid,lid,qtyAt(pid,lid)-qty);p.updatedAt=Date.now();
-  const total=Math.round(qty*p.price*100)/100;
-  db.sales.unshift({id:"s"+Date.now(),productId:pid,locationId:lid,name:p.name,qty,total,by,time:now(),ts:Date.now()});
-  pushHist(p.name,"-"+qty,"sale",`Sale × ${qty} by ${by}`,locName(lid));log(`Sold ${qty} × ${p.name} @ ${locName(lid)} for ${money(total)}`);
-  const leftSale=qtyAt(pid,lid);
-  syncStockAlerts();
-  if(leftSale===0&&db.prefs.out)toast(`Out of stock: ${p.name} @ ${locName(lid)}`,{view:"restock"});
-  else if(qty>=BIGCHANGE)notify("bigchange",`Large sale: ${p.name}`,`${qty} sold @ ${locName(lid)}`,{view:"sale"},true);
-  save();renderSale();renderDashboard();e.target.reset();document.getElementById("sQty").value=1;
 }
 function openReturn(saleId){
   const s=db.sales.find(x=>x.id===saleId);if(!s)return;
@@ -1074,17 +1217,10 @@ function submitReturn(e,saleId){
   const total=Math.round(unit*qty*100)/100;
   setQty(s.productId,s.locationId,qtyAt(s.productId,s.locationId)+qty);
   const p=prodById(s.productId);if(p)p.updatedAt=Date.now();
-  db.returns.unshift({id:"w"+Date.now(),saleId:s.id,productId:s.productId,name:s.name,locationId:s.locationId,qty,total,reason,by:currentUser().name,time:now(),ts:Date.now()});
+  db.returns.unshift({id:"w"+Date.now(),saleId:s.id,productId:s.productId,name:s.name,locationId:s.locationId,qty,total,reason,by:actor(),time:now(),ts:Date.now()});
   pushHist(s.name,"+"+qty,"return",`${reason} (sale ${s.time})`,locName(s.locationId));
   log(`Returned ${qty} × ${s.name} — ${reason}`);
   save();closeModal();renderSale();renderDashboard();syncStockAlerts();
-}
-function fillSaleLocs(){
-  const pid=document.getElementById("sProduct").value;
-  const locs=db.locations.map(l=>({l,q:qtyAt(pid,l.id)}));
-  document.getElementById("sLoc").innerHTML=locs.map(({l,q})=>`<option value="${l.id}" ${q<=0?"disabled":""}>${esc(l.name)} — avail ${q}${q<=0?" (empty)":""}</option>`).join("");
-  const first=locs.find(x=>x.q>0);if(first)document.getElementById("sLoc").value=first.l.id;
-  document.getElementById("saleHint").textContent="Sale deducts from the chosen location only.";
 }
 /* Suppliers */
 const supById=id=>(db.suppliers||[]).find(s=>s.id===id);
@@ -1191,7 +1327,7 @@ function prefillPurchase(pid,lid,sid){
 function submitPurchase(e){
   e.preventDefault();document.getElementById("puErr").textContent="";
   const sid=document.getElementById("puSupplier").value,lid=document.getElementById("puLoc").value;
-  const by=(document.getElementById("puBy").value||"").trim()||currentUser().name,note=document.getElementById("puNote").value.trim();
+  const by=(document.getElementById("puBy").value||"").trim()||actor(),note=document.getElementById("puNote").value.trim();
   const s=supById(sid);
   if(!s){document.getElementById("puErr").textContent="Add a supplier first.";return;}
   if(!locById(lid)){document.getElementById("puErr").textContent="Select a receiving location.";return;}
@@ -1327,9 +1463,10 @@ function notifBadge(t){return t==="out"?'<span class="badge out">Out</span>':t==
 function renderNotifDrop(){
   const d=document.getElementById("notifDrop");if(!d)return;
   const items=db.notifications.slice(0,8);
-  d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><strong>Notifications</strong><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();markAllRead()">Mark all read</button></div>`+
-  (items.length?items.map(n=>`<div class="notif-item${n.read?"":" unread"}" data-id="${n.id}">${notifBadge(n.type)} <strong>${esc(n.title)}</strong><br><span class="hint">${esc(n.detail)} · ${esc(n.time)}</span></div>`).join(""):"<p>No notifications.</p>")+
-  `<div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="document.getElementById('notifDrop').classList.remove('open');go('notifications')">View all</button></div>`;
+  const unread=db.notifications.filter(n=>!n.read).length;
+  d.innerHTML=`<div class="notif-head"><div><strong>Notifications</strong><br><span class="hint">${unread?unread+" unread":"All caught up"}</span></div><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();markAllRead()">Mark all read</button></div>`+
+  `<div class="notif-list">`+(items.length?items.map(n=>`<div class="notif-item${n.read?"":" unread"}" data-id="${n.id}"><div class="notif-top">${notifBadge(n.type)}<span class="notif-time">${esc(n.time)}</span></div><div class="notif-title">${esc(n.title)}</div><div class="notif-detail">${esc(n.detail)}</div></div>`).join(""):"<p>No notifications.</p>")+`</div>`+
+  `<div class="notif-foot"><button class="btn btn-primary btn-sm" onclick="document.getElementById('notifDrop').classList.remove('open');go('notifications')">View all notifications</button></div>`;
   d.querySelectorAll(".notif-item").forEach(el=>{el.onclick=()=>{d.classList.remove("open");openNotif(el.getAttribute("data-id"));};});
 }
 function openNotif(id){
@@ -1532,16 +1669,19 @@ const PERMS={
 };
 function currentUser(){
   const u=db.users.find(x=>x.id===db.activeUserId&&x.active);
-  if(u)return u;
-  const a=db.users.find(x=>x.role==="Admin"&&x.active)||db.users.find(x=>x.active)||db.users[0];
-  db.activeUserId=a.id;save();return a;
+  return u||null;
 }
-function canGo(view){return (PERMS[currentUser().role]||[]).includes(view);}
+function actor(){const u=currentUser();return u?u.name:"Staff";}
+function actor(){const u=currentUser();return u?u.name:"Staff";}
+function canGo(view){return (PERMS[(currentUser()||{}).role]||[]).includes(view);}
 function roleBadge(r){return r==="Admin"?'<span class="badge out">Admin</span>':r==="Manager"?'<span class="badge low">Manager</span>':'<span class="badge in">Staff</span>';}
 function renderRoleUI(){
   const u=currentUser();
   const chip=document.getElementById("userChip");
-  if(chip)chip.innerHTML=`<div class="profile" onclick="openSwitchUser()"><div class="avatar">${esc((u.name||"?")[0].toUpperCase())}</div><div class="who"><strong>${esc(u.name)}</strong><span class="hint">${esc(u.role)}</span></div><span class="chev">›</span></div>`;
+  if(chip){
+    chip.innerHTML=u?`<div class="profile" onclick="openSwitchUser()"><div class="avatar">${esc((u.name||"?")[0].toUpperCase())}</div><div class="who"><strong>${esc(u.name)}</strong><span class="hint">${esc(u.role)}</span></div><span class="chev">›</span></div>`
+      :`<div class="profile" onclick="showLogin()"><div class="avatar">?</div><div class="who"><strong>Not signed in</strong><span class="hint">Tap to sign in</span></div><span class="chev">›</span></div>`;
+  }
   const add=document.getElementById("addTopBtn");if(add)add.style.display=canGo("add")?"":"none";
   const pc=document.getElementById("profitCard");if(pc)pc.style.display=canGo("reports")?"":"none";
   renderBranding();
@@ -1549,34 +1689,78 @@ function renderRoleUI(){
 function renderBranding(){
   const name=(db.settings&&db.settings.businessName)||"My Business";
   const bs=document.getElementById("brandSub");if(bs)bs.textContent=name;
-  document.title=`${name} — Curio`;
+  const lb=document.getElementById("loginBiz");if(lb)lb.textContent=name+" · Inventory Management";
+  document.title="Curio";
+}
+function showLogin(){document.getElementById("loginErr").textContent="";document.getElementById("loginScreen").classList.add("show");const e=document.getElementById("loginEmail");if(e)setTimeout(()=>e.focus(),100);}
+function hideLogin(){document.getElementById("loginScreen").classList.remove("show");}
+function doLogin(e){
+  e.preventDefault();
+  const email=document.getElementById("loginEmail").value.trim().toLowerCase();
+  const pw=document.getElementById("loginPass").value;
+  const err=document.getElementById("loginErr");
+  const u=db.users.find(x=>(x.email||"").toLowerCase()===email);
+  if(!u||!u.active||u.pass!==hashPw(u.salt,pw)){err.textContent="Wrong email or password, or account disabled.";return;}
+  db.activeUserId=u.id;log(`Signed in as ${u.name} (${u.role})`);save();
+  document.getElementById("loginPass").value="";
+  hideLogin();nav();go("dashboard");
+  toast(`Welcome back, ${u.name}.`,null);
+}
+function signOut(){
+  const u=currentUser();
+  db.activeUserId=null;save();closeModal();nav();go("dashboard");
+  if(u)toast(`Signed out (${u.name}).`,null);
+}
+function changePw(e){
+  e.preventDefault();
+  const me=currentUser();if(!me)return;
+  const cur=document.getElementById("pwCur").value,nw=document.getElementById("pwNew").value,cf=document.getElementById("pwCf").value;
+  const err=document.getElementById("pwErr");err.textContent="";
+  if(me.pass!==hashPw(me.salt,cur)){err.textContent="Current password is wrong.";return;}
+  if(!nw||nw.length<6){err.textContent="New password needs at least 6 characters.";return;}
+  if(nw!==cf){err.textContent="New passwords do not match.";return;}
+  me.pass=hashPw(me.salt,nw);log(`Password changed for ${me.name}`);save();
+  closeModal();toast("Password changed.",null);
 }
 function openSwitchUser(){
-  const list=db.users.filter(u=>u.active);
-  openModal("Switch user",list.length?list.map(u=>`<p style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span><strong>${esc(u.name)}</strong> ${roleBadge(u.role)}${u.id===db.activeUserId?' <span class="hint">(current)</span>':""}</span><button class="btn btn-ghost btn-sm" onclick="switchUser('${u.id}')">Use</button></p>`).join(""):"<p>No active users.</p>");
-}
-function switchUser(id){
-  const u=db.users.find(x=>x.id===id&&x.active);if(!u)return;
-  db.activeUserId=id;log(`Signed in as ${u.name} (${u.role})`);save();closeModal();nav();go("dashboard");
-  toast(`Signed in as ${u.name} (${u.role}).`,null);
+  const me=currentUser();if(!me)return;
+  openModal("My account",`<p><strong>${esc(me.name)}</strong> ${roleBadge(me.role)}<br><span class="hint">${esc(me.email||"")}</span></p>
+  <form onsubmit="changePw(event)" style="padding:0">
+    <div class="field"><label>Current password</label><input id="pwCur" type="password" required maxlength="120" autocomplete="current-password" /></div>
+    <div class="field"><label>New password (min 6 characters)</label><input id="pwNew" type="password" required maxlength="120" autocomplete="new-password" /></div>
+    <div class="field"><label>Confirm new password</label><input id="pwCf" type="password" required maxlength="120" autocomplete="new-password" /></div>
+    <div class="err" id="pwErr"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" type="submit">Change password</button><button class="btn btn-ghost btn-sm" type="button" onclick="signOut()">Sign out</button></div>
+  </form>`);
 }
 function renderUsers(){
-  const me=currentUser();
+  const me=currentUser();if(!me)return;
   document.getElementById("usersBody").innerHTML=db.users.map(u=>{
     const rec=db.sales.filter(s=>s.by===u.name).length+(db.purchases||[]).filter(b=>b.by===u.name).length;
-    return `<tr><td><strong>${esc(u.name)}</strong>${u.id===db.activeUserId?' <span class="hint">(you)</span>':""}</td>
+    return `<tr><td><strong>${esc(u.name)}</strong><br><span class="hint">${esc(u.email||"")}</span>${u.id===db.activeUserId?' <span class="hint">(you)</span>':""}</td>
     <td><select onchange="setRole('${u.id}',this.value)" ${u.id===me.id?"disabled":""}>${["Admin","Manager","Staff"].map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select></td>
     <td>${u.active?'<span class="badge in">Active</span>':'<span class="badge out">Disabled</span>'}</td>
     <td class="qty">${rec}</td>
-    <td><div class="row-actions">${u.id!==me.id?`<button class="btn btn-ghost btn-sm" onclick="toggleUser('${u.id}')">${u.active?"Disable":"Enable"}</button><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>`:'<span class="hint">—</span>'}</div></td></tr>`;
+    <td><div class="row-actions">${u.id!==me.id?`<button class="btn btn-ghost btn-sm" onclick="toggleUser('${u.id}')">${u.active?"Disable":"Enable"}</button><button class="btn btn-ghost btn-sm" onclick="resetUserPw('${u.id}')">Reset PW</button><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>`:'<span class="hint">—</span>'}</div></td></tr>`;
   }).join("");
+}
+function resetUserPw(id){
+  const u=db.users.find(x=>x.id===id);if(!u||u.id===currentUser().id)return;
+  if(!confirm(`Reset password for "${u.name}" to the default (curio123)?`))return;
+  u.pass=hashPw(u.salt,"curio123");log(`Password reset for ${u.name}`);save();
+  toast(`Password reset for ${u.name}.`,null);
 }
 function addUser(e){
   e.preventDefault();
   const name=document.getElementById("userName").value.trim(),role=document.getElementById("userRole").value;
+  const email=document.getElementById("userEmail").value.trim().toLowerCase(),pw=document.getElementById("userPass").value;
   if(name.length<2){alert("Name must be at least 2 characters.");return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert("Enter a valid email.");return;}
+  if(!pw||pw.length<6){alert("Password needs at least 6 characters.");return;}
   if(db.users.some(u=>u.name.toLowerCase()===name.toLowerCase())){alert("A user with this name already exists.");return;}
-  db.users.push({id:"u"+Date.now(),name,role,active:true});
+  if(db.users.some(u=>(u.email||"").toLowerCase()===email)){alert("That email is already in use.");return;}
+  const salt="s-"+Date.now().toString(36);
+  db.users.push({id:"u"+Date.now(),name,email,salt,pass:hashPw(salt,pw),role,active:true});
   log(`Added user ${name} (${role})`);save();e.target.reset();renderUsers();
 }
 function setRole(id,role){
@@ -1701,7 +1885,7 @@ function handleScan(code){
 }
 function scanToFind(){openScanner(p=>openDetail(p.id));}
 function scanToInventory(){openScanner(p=>{document.getElementById("search").value=p.barcode||p.name;go("inventory");openDetail(p.id);});}
-function scanToSale(){openScanner(p=>{go("sale");document.getElementById("sProduct").value=p.id;fillSaleLocs();const q=document.getElementById("sQty");if(q){q.focus();q.select();}});}
+function scanToSale(){openScanner(p=>{go("sale");saleAddLine(p.id);});}
 function scanToPurchase(){openScanner(p=>{go("purchases");renderPurchaseForm();document.getElementById("puLines").innerHTML="";puAddLine(p.id);});}
 function scanToTransfer(){openScanner(p=>{go("transfers");renderTransferForm();document.getElementById("tProduct").value=p.id;updateTransferHint();});}
 /* Paystack Test-Mode Payments (frontend checkout only — no secret key here) */
@@ -1724,7 +1908,7 @@ function renderPayments(){
   document.getElementById("payBody").innerHTML=rows.length?rows.map(p=>`<tr><td><strong>${esc(p.ref)}</strong></td><td>${esc(p.time)}</td><td class="qty">${ngn(p.naira)}</td><td>${esc(p.email)}</td><td>${payBadge(p.status)}</td></tr>`).join(""):'<tr><td colspan="5">No payments yet.</td></tr>';
 }
 function recordPaystackPayment(ref,email,naira,status){
-  db.payments.unshift({id:"pay"+Date.now(),ref,email,naira,status,time:now(),ts:Date.now(),by:currentUser().name});
+  db.payments.unshift({id:"pay"+Date.now(),ref,email,naira,status,time:now(),ts:Date.now(),by:actor()});
   if(status==="success")log(`Paystack test payment ${ngn(naira)} from ${email} (${ref})`);
   else log(`Paystack test payment ${status}: ${email} (${ref})`);
   save();renderPayments();renderDashboard();

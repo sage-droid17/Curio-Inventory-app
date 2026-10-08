@@ -1064,4 +1064,57 @@ Limits: not shared across machines (acceptable for local dev); enforce 5 MB max,
 
 **Status:** This refinement is reflected in `design.html` in the project root. No product requirements were removed or modified.
 
+---
+
+# **31\. Submitted Implementation Status & Requirements Traceability**
+
+## **31.1 What was actually built (and where the plan stands)**
+
+Phases 0–8 (§28) specify a full-stack Next.js + SQLite implementation path. The **submitted product** is a working offline-first prototype (`index.html`, single file, vanilla JS + browser storage) that implements the PRD's functional requirements directly, plus two plan extensions:
+
+## **Phase 9 — Cart Checkout, Payments, Polish & Deployment (built)**
+
+**Goal:** Checkout speed, real-world payment intake in test, and shippable presentation without changing the §28 data model.
+
+**Deliverables (all in the submitted prototype):**
+
+* Multi-item sale cart with per-location validation, one-step recording, and per-product history rows
+* Paystack InlineJS V2 test checkout (NGN → kobo, unique references, success/cancelled/failed recording, revenue integration, CSV export) — TEST MODE ONLY, no secret key
+* Notification centre redesign (spacious dropdown cards + full page) and user-controlled alert preferences
+* Professional light theme, grouped sidebar navigation with search, user profile footer, mobile drawer menu, SVG favicon
+* Password login (email + salted hash, sessions, password change, admin resets) enforcing the §21 role matrix client-side
+* Netlify static deployment (`netlify.toml`) with auto-deploy from `master`
+
+## **31.2 Requirements traceability (§§1–27 → prototype status)**
+
+* §6 Core Inventory — **Implemented** (fields, image, barcode, expiry, min level, manual corrections)
+* §7 Stock History — **Implemented** (item, change, type, date, reason, user, location)
+* §8 Low-Stock & Restocking — **Implemented** (auto Restock List per location + supplier context)
+* §9 Search, Filtering & Sorting — **Mostly implemented** (name/barcode search; category/status/location filters; supplier filter not present)
+* §10 Dashboard — **Implemented** (totals, low/out, recent activity/sales, quick actions)
+* §11 Suppliers — **Implemented** (profiles, contacts, linked products, purchase history)
+* §12 Sales — **Implemented** (location-aware, recorded-by, history; plus cart and returns as extensions)
+* §13 Purchases — **Implemented** (multi-item, cost capture, supplier/product linking)
+* §14 Profit Tracking — **Implemented with simplification** (COGS uses current unit cost, not FIFO/average)
+* §15 Expense Tracking — **Implemented** (all PRD categories + history + filters)
+* §16 Reports & Analytics — **Implemented** (period picker, previous-period comparison, charts, CSV export)
+* §17 Multiple Locations — **Implemented** (per-location quantities + combined views)
+* §18 Stock Transfers — **Implemented** (Pending → In Transit → Received; stock moves only on receipt)
+* §19 Notifications — **Implemented** (low/out/expiry/transfer/large-change alerts + preferences)
+* §20 Activity History — **Implemented** (global feed with actor and timestamp)
+* §21 User Roles & Permissions — **Implemented with limitation** (matrix enforced in-app, but client-side only — not real server security)
+* §22 Navigation — **Implemented** (all sections reachable; mobile drawer added)
+* §23 User Flows — **Implemented and manually tested** (Add, Receive, Sell, Restock, Move, Review; see README checklist)
+* §24 Principles — followed (simple everyday actions, attention-first dashboard, full audit trail)
+* §25 Essential Features — **all present** in the prototype
+* §26 Future Enhancements — barcode scanning **implemented** (Phase 8); customer records, discounts, variants, budgets remain planned
+* §27 Success Criteria — an owner can answer every listed question from the dashboard and reports
+
+## **31.3 Honest limitations (submission context)**
+
+* Single-device browser storage; no concurrent multi-user operation (production path: §29 backend)
+* Demo-grade client-side auth, not server security
+* Paystack test mode only; no server-side verification (requires `sk_test_` on a server)
+* No tax/VAT handling; single-currency display with NGN-only collection
+
 
