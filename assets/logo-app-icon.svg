@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Curio app icon">
   <title>Curio app icon</title>
   <rect x="0" y="0" width="64" height="64" rx="14" fill="#4CAF50"/>
-  <g fill="#FFFFFF">
-    <rect x="14" y="12" width="36" height="11" rx="5.5"/>
-    <rect x="14" y="26.5" width="21" height="11" rx="5.5"/>
-    <rect x="14" y="41" width="36" height="11" rx="5.5"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round">
+    <path d="M 46.1 15.2 A 22 22 0 1 0 46.1 48.8" stroke-width="7"/>
+    <path d="M 39.7 22.8 A 12 12 0 1 0 39.7 41.2" stroke-width="6"/>
   </g>
-  <circle cx="44" cy="32" r="5.5" fill="#FFFFFF"/>
 </svg>

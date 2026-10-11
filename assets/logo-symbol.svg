@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Curio logo">
-  <title>Curio — stacked inventory mark</title>
-  <g fill="#4CAF50">
-    <rect x="12" y="9" width="40" height="12" rx="6"/>
-    <rect x="12" y="26" width="24" height="12" rx="6"/>
-    <rect x="12" y="43" width="40" height="12" rx="6"/>
+  <title>Curio — flowing C mark</title>
+  <g fill="none" stroke="#4CAF50" stroke-linecap="round">
+    <path d="M 46.1 15.2 A 22 22 0 1 0 46.1 48.8" stroke-width="7"/>
+    <path d="M 39.7 22.8 A 12 12 0 1 0 39.7 41.2" stroke-width="6"/>
   </g>
-  <circle cx="46" cy="32" r="6" fill="#FFC107"/>
 </svg>

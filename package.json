@@ -1,0 +1,23 @@
+{
+  "name": "curio-inventory",
+  "version": "1.0.0",
+  "description": "Curio inventory management app — Capacitor Android wrapper (web assets live in www/)",
+  "private": true,
+  "scripts": {
+    "build:web": "node scripts/prepare-webdir.js",
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android",
+    "apk:debug": "npm run build:web && cap sync android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0",
+    "jiti": "^2.7.0",
+    "tsk": "^0.3.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

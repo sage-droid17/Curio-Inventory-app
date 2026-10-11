@@ -6,6 +6,7 @@
 <title>Curio</title>
 <link rel="icon" type="image/svg+xml" href="assets/logo-symbol.svg" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#4CAF50" />
@@ -68,6 +69,17 @@
   .menu-btn:active{transform:scale(.94)}
   .scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);z-index:70;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s linear .25s;pointer-events:none}
   .scrim.show{opacity:1;visibility:visible;transition:opacity .25s ease;pointer-events:auto}
+  .sheet-back{position:fixed;inset:0;z-index:95;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;transition:opacity .22s ease}
+  .sheet-back.show{display:flex;opacity:1}
+  .sheet{background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:92vh;max-height:92dvh;overflow-y:auto;padding:20px;box-shadow:0 -8px 30px rgba(0,0,0,.25);transform:translateY(24px);transition:transform .22s ease-out}
+  .sheet-back.show .sheet{transform:none}
+  @media(min-width:640px){.sheet-back{align-items:center;padding:20px}.sheet{border-radius:16px;border-bottom:1px solid var(--line)}}
+  .sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .sheet-logo{width:48px;height:48px;flex-shrink:0;border-radius:12px}
+  .sheet-x{margin-left:auto;background:none;border:none;color:var(--muted);font-size:20px;font-weight:800;cursor:pointer;min-width:44px;min-height:44px;border-radius:10px;line-height:1}
+  .sheet-x:hover{background:var(--hover);color:var(--ink)}
+  .sheet-x:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .install-cta{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;font-size:15px}
   #loginScreen{display:none;position:fixed;inset:0;z-index:100;background:#212121;place-items:center;padding:20px}
   #loginScreen.show{display:grid}
   .login-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.4)}
@@ -160,6 +172,7 @@
   .notif-title{font-weight:800;font-size:15px;margin:2px 0}
   .notif-detail{font-size:13px;color:var(--muted);line-height:1.5}
   .notif-foot .btn{width:100%}
+  #installBtn{align-items:center;gap:6px}
   #toasts{position:fixed;bottom:16px;right:16px;z-index:99;display:grid;gap:8px}
   footer{padding:16px 22px;font-size:14px;font-weight:600;color:var(--muted)}
   .mobile-nav{display:none;background:#212121;color:#fff;padding:10px 12px;gap:8px;overflow-x:auto;white-space:nowrap}
@@ -202,9 +215,9 @@
     <div class="topbar">
       <div style="display:flex;gap:10px;align-items:center"><button class="btn btn-ghost btn-sm menu-btn" onclick="toggleMenu()" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appDrawer">☰</button><div><h2 id="pageTitle">Dashboard</h2><p>What do I have · where is it · what needs attention?</p></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" id="themeBtn" onclick="toggleTheme()" title="Switch to dark mode">🌙</button>
-        <button class="btn btn-ghost btn-sm" id="installBtn" style="display:none" onclick="installApp()">📲 Install</button>
-        <button class="btn btn-ghost btn-sm" id="bellBtn" onclick="toggleNotif(event)">🔔 <strong id="bellCount">0</strong></button>
+        <button class="btn btn-ghost btn-sm" id="themeBtn" onclick="toggleTheme()" title="Switch to dark mode"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5z"/></svg></button>
+        <button class="btn btn-ghost btn-sm" id="installBtn" style="display:none;align-items:center;gap:6px" onclick="openInstallSheet()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg> Install</button>
+        <button class="btn btn-ghost btn-sm" id="bellBtn" onclick="toggleNotif(event)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg> <strong id="bellCount">0</strong></button>
         <button class="btn btn-ghost btn-sm" onclick="resetDemo()">Reset data</button>
             <button class="btn btn-primary btn-sm" onclick="go('add')">+ Add Item</button>
       </div>
@@ -631,6 +644,18 @@
     <div id="modalBody" style="padding:16px"></div>
   </div>
 </div>
+<div class="sheet-back" id="installSheet" onclick="if(event.target===this)dismissInstallSheet()">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="sheet-head">
+      <img class="sheet-logo" src="assets/logo-app-icon.svg" alt="Curio logo" />
+      <div style="flex:1;min-width:0"><h3 id="installTitle" style="margin:0">Install Curio</h3><p class="hint" style="margin:2px 0 0">on your device</p></div>
+      <button class="sheet-x" onclick="dismissInstallSheet()" aria-label="Close installation prompt">✕</button>
+    </div>
+    <p>Access your inventory faster from your home screen. Free, works offline, no app store needed.</p>
+    <div id="installIosSteps" style="display:none"><p><strong>On iPhone/iPad, install from Safari:</strong></p><p><strong>1.</strong> Tap <strong>Share</strong> in the toolbar.<br><strong>2.</strong> Tap <strong>Add to Home Screen</strong>.<br><strong>3.</strong> Open Curio from your home screen — it runs full-screen and offline.</p></div>
+    <button class="btn btn-primary install-cta" id="installCta" onclick="confirmInstallApp()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg> Install App</button>
+  </div>
+</div>
 
 <script>
 const KEY="curio-phase2-v1";
@@ -745,7 +770,29 @@ function pushHist(name,change,type,reason,location){db.history.unshift({time:now
 
 const VIEWS=[["dashboard","Dashboard"],["inventory","Inventory"],["locations","Locations"],["transfers","Transfers"],["categories","Categories"],["history","History"],["add","Add / Edit"],["sale","Sales"],["payments","Payments"],["suppliers","Suppliers"],["purchases","Purchases"],["restock","Restock"],["notifications","Notifications"],["expenses","Expenses"],["reports","Reports"],["users","Users"],["settings","Settings"]];
 const NAVGROUPS={main:["dashboard","inventory","sale","payments","suppliers","purchases","restock"],manage:["locations","transfers","categories","history","notifications","expenses","reports"],system:["users","settings"]};
-const NAVICONS={dashboard:"📊",inventory:"📦",sale:"🧾",suppliers:"🚚",purchases:"🛒",payments:"💳",restock:"⚠️",locations:"🏬",transfers:"🔀",categories:"🏷️",history:"🕘",notifications:"🔔",expenses:"💸",reports:"📈",users:"👥",settings:"⚙️",add:"➕"};
+const svgIcon=inner=>'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+inner+'</svg>';
+const NAVICONS={
+dashboard:svgIcon('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
+inventory:svgIcon('<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>'),
+sale:svgIcon('<path d="M6 2h12v20l-3-2-3 2-3-2-3 2-3-2-3 2V2z"/><path d="M9 7h6M9 11h6"/>'),
+suppliers:svgIcon('<rect x="1.5" y="5" width="13" height="11" rx="1"/><path d="M14.5 9h3.8l3.2 3.2V16h-7z"/><circle cx="6" cy="18.5" r="1.8"/><circle cx="17" cy="18.5" r="1.8"/>'),
+purchases:svgIcon('<circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/><path d="M2 3h3l2.6 12h10.8l2-7H6"/>'),
+payments:svgIcon('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'),
+restock:svgIcon('<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4"/><path d="M12 17v.5"/>'),
+locations:svgIcon('<path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
+transfers:svgIcon('<path d="M4 7h13l-3.5-3.5"/><path d="M20 17H7l3.5 3.5"/>'),
+categories:svgIcon('<path d="M3.5 3.5H11l9.5 9.5-7.5 7.5L3.5 11V3.5z"/><circle cx="8.5" cy="8.5" r="1.4"/>'),
+history:svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>'),
+notifications:svgIcon('<path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/>'),
+expenses:svgIcon('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>'),
+reports:svgIcon('<path d="M4 20h16"/><path d="M8 20v-6"/><path d="M12 20V8"/><path d="M16 20v-4"/>'),
+users:svgIcon('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5.2a3.5 3.5 0 0 1 0 5.9"/><path d="M17.5 14.4a6.5 6.5 0 0 1 4 5.6"/>'),
+settings:svgIcon('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>'),
+add:svgIcon('<path d="M12 5v14M5 12h14"/>')};
+const NAVICONS_MOON=svgIcon('<path d="M20 13.5A8 8 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5z"/>');
+const NAVICONS_SUN=svgIcon('<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>');
+const NAVICONS_BELL=svgIcon('<path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/>');
+const NAVICONS_DOWNLOAD=svgIcon('<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/>');
 function nav(){
   const sn=document.getElementById("sideNav"),mn=document.getElementById("mobileNav");sn.innerHTML="";mn.innerHTML="";
   const mk=(id,label,parent,navId,withIcon)=>{
@@ -1448,7 +1495,7 @@ function notify(type,title,detail,link,toastIt){
   return true;
 }
 function currentTheme(){try{return localStorage.getItem("curio-theme")||"light";}catch(e){return"light";}}
-function applyTheme(t){document.body.classList.toggle("dark",t==="dark");try{localStorage.setItem("curio-theme",t);}catch(e){}const b=document.getElementById("themeBtn");if(b){b.textContent=t==="dark"?"☀️":"🌙";b.title=t==="dark"?"Switch to light mode":"Switch to dark mode";}}
+function applyTheme(t){document.body.classList.toggle("dark",t==="dark");try{localStorage.setItem("curio-theme",t);}catch(e){}  const b=document.getElementById("themeBtn");if(b){b.innerHTML=t==="dark"?NAVICONS_SUN:NAVICONS_MOON;b.title=t==="dark"?"Switch to light mode":"Switch to dark mode";}}
 function toggleTheme(){applyTheme(currentTheme()==="dark"?"light":"dark");}
 function toast(msg,link){
   const box=document.getElementById("toasts");if(!box)return;
@@ -2039,26 +2086,54 @@ function exportPayments(){
 function resetDemo(){if(!confirm("Reset all data to defaults? This cannot be undone."))return;db=seed();save();syncStockAlerts();resetProductForm();resetExpenseForm();renderDashboard();renderInventory();renderLocations();renderTransferForm();renderTransfers();renderSuppliers();renderPurchaseForm();renderPurchases();renderRestock();renderCategories();renderHistory();renderSale();renderNotifications();renderExpenses();curPeriod="month";renderReports();renderUsers();renderSettings();renderPayments();go("dashboard");}
 /* Installable app (PWA): shows the Install button when the browser allows it. */
 let deferredPrompt=null;
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;updateInstallBtn();});
-window.addEventListener("appinstalled",()=>{deferredPrompt=null;updateInstallBtn();toast("Curio installed — find it on your home screen.",null);});
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;updateInstallBtn();maybeAutoShowInstall();});
+window.addEventListener("appinstalled",()=>{deferredPrompt=null;hideInstallSheet();updateInstallBtn();toast("Curio installed — find it on your home screen.",null);});
 function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||"")&&!window.MSStream;}
 function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;}
+function installDismissed(){try{return sessionStorage.getItem("curio-install-hide")==="1";}catch(e){return false;}}
 function updateInstallBtn(){
   const b=document.getElementById("installBtn");if(!b)return;
-  b.style.display=(!isStandalone()&&(deferredPrompt||isIosDevice()))?"":"none";
+  b.style.display=(!isStandalone()&&(deferredPrompt||isIosDevice()))?"inline-flex":"none";
 }
-function installApp(){
+function openInstallSheet(){
+  const s=document.getElementById("installSheet");if(!s)return;
+  const ios=!deferredPrompt&&isIosDevice()&&!isStandalone();
+  document.getElementById("installIosSteps").style.display=ios?"":"none";
+  document.getElementById("installCta").style.display=(deferredPrompt||ios)?"":"none";
+  s.classList.add("show");s.setAttribute("aria-hidden","false");
+  const x=s.querySelector(".sheet-x");if(x)x.focus();
+}
+function hideInstallSheet(){
+  const s=document.getElementById("installSheet");if(!s)return;
+  s.classList.remove("show");s.setAttribute("aria-hidden","true");
+}
+function dismissInstallSheet(){
+  try{sessionStorage.setItem("curio-install-hide","1");}catch(e){}
+  hideInstallSheet();
+}
+function maybeAutoShowInstall(){
+  if(isStandalone()||installDismissed())return;
+  setTimeout(()=>{if(deferredPrompt&&!installDismissed()&&!isStandalone())openInstallSheet();},1500);
+}
+function confirmInstallApp(){
   if(deferredPrompt){
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(c=>{if(c&&c.outcome!=="accepted")toast("Install dismissed — you can try again anytime.",null);deferredPrompt=null;updateInstallBtn();}).catch(()=>{});
+    const p=deferredPrompt;deferredPrompt=null;updateInstallBtn();
+    hideInstallSheet();
+    try{
+      p.prompt();
+      p.userChoice.then(c=>{if(c&&c.outcome!=="accepted")toast("Install dismissed — you can try again anytime.",null);}).catch(()=>{});
+    }catch(e){toast("Install is not available in this browser right now.",null);}
     return;
   }
-  if(isIosDevice()){
-    openModal("Install Curio",`<p>On iPhone/iPad, install from Safari:</p><p><strong>1.</strong> Tap <strong>Share</strong> in the toolbar.<br><strong>2.</strong> Tap <strong>Add to Home Screen</strong>.<br><strong>3.</strong> Open Curio from your home screen — it runs full-screen and offline.</p>`);
-    return;
-  }
+  if(isIosDevice())return;
+  hideInstallSheet();
   toast("Install is not available in this browser right now.",null);
 }
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape")return;
+  const s=document.getElementById("installSheet");
+  if(s&&s.classList.contains("show"))dismissInstallSheet();
+});
 nav();applyTheme(currentTheme());save();syncStockAlerts();renderBell();renderDashboard();renderInventory();renderLocations();renderTransferForm();renderTransfers();renderSuppliers();renderPurchaseForm();renderPurchases();renderRestock();renderCategories();renderHistory();renderSale();renderNotifications();renderExpenses();renderReports();renderUsers();renderSettings();renderPayments();updateInstallBtn();go("dashboard");
 if(location.protocol.indexOf("http")===0&&"serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}
 </script>

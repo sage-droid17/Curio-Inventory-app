@@ -1,0 +1,9 @@
+{
+  "appId": "com.curio.inventory",
+  "appName": "Curio",
+  "webDir": "www",
+  "backgroundColor": "#4CAF50",
+  "android": {
+    "allowMixedContent": false
+  }
+}
